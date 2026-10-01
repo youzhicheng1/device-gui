@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QListWidgetItem>
+#include <QToolBar>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -32,5 +33,7 @@ private:
     Ui::MainWindow *ui;
     int device_count=0;
     QStatusBar* stsBar=nullptr;
+    QMenuBar* mnBar=nullptr;
+    QToolBar* toolBar=nullptr;
 };
 #endif // MAINWINDOW_H

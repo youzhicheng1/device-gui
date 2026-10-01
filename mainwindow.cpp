@@ -8,7 +8,43 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    stsBar=statusBar();
+
+    //菜单栏
+    mnBar=menuBar();
+    QMenu* doc=new QMenu("doc");
+    QMenu* edit=new QMenu("edit");
+    //文件菜单栏
+    mnBar->addMenu(doc);
+    QAction *add=new QAction("add");
+    QAction *quit=new QAction("quit");
+    doc->addAction(add);
+    doc->addSeparator();//添加分割线
+    doc->addAction(quit);
+    //编辑菜单栏
+    mnBar->addMenu(edit);
+    QAction *del=new QAction("del");
+    QAction *clear=new QAction("clear");
+    edit->addAction(del);
+    doc->addSeparator();
+    edit->addAction(clear);
+    //信号连接
+    connect(add,&QAction::triggered,this,&MainWindow::on_AddButton_clicked);
+    connect(quit,&QAction::triggered,this,&QWidget::close);
+    connect(del,&QAction::triggered,this,&MainWindow::on_DelButton_clicked);
+    connect(clear,&QAction::triggered,this,&MainWindow::on_ClearButton_clicked);
+
+    //工具栏
+    toolBar=new QToolBar(this);
+    this->addToolBar(Qt::TopToolBarArea,toolBar);
+    toolBar->setFloatable(1);
+    toolBar->setMovable(1);
+    toolBar->addAction(add);
+    toolBar->addAction(del);
+    toolBar->addAction(clear);
+
+
+
+    stsBar=statusBar();//状态栏
     stsBar->showMessage(QString("当前设备数：%1").arg(ui->listWidget->count()));
 }
 
