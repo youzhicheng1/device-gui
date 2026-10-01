@@ -1,10 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <QInputDialog>
-#include <QMessageBox>
-#include <QKeyEvent>
-#include <QLabel>
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -13,27 +8,37 @@ MainWindow::MainWindow(QWidget *parent)
 
     //菜单栏
     mnBar=menuBar();
-    QMenu* doc=new QMenu("doc");
+    QMenu* device=new QMenu("device");
     QMenu* edit=new QMenu("edit");
-    //文件菜单栏
-    mnBar->addMenu(doc);
+    //设备菜单栏
+    mnBar->addMenu(device);
     QAction *add=new QAction("add");
     QAction *quit=new QAction("quit");
-    doc->addAction(add);
-    doc->addSeparator();//添加分割线
-    doc->addAction(quit);
+    device->addAction(add);
+    device->addSeparator();//添加分割线
+    device->addAction(quit);
     //编辑菜单栏
     mnBar->addMenu(edit);
     QAction *del=new QAction("del");
     QAction *clear=new QAction("clear");
     edit->addAction(del);
-    doc->addSeparator();
+    edit->addSeparator();
     edit->addAction(clear);
+    //文件菜单栏
+    QMenu* file=new QMenu("file");
+    mnBar->addMenu(file);
+    QAction* save=new QAction("save");
+    QAction* open=new QAction("open");
+    file->addAction(save);
+    file->addSeparator();
+    file->addAction(open);
     //信号连接
     connect(add,&QAction::triggered,this,&MainWindow::on_AddButton_clicked);
     connect(quit,&QAction::triggered,this,&QWidget::close);
     connect(del,&QAction::triggered,this,&MainWindow::on_DelButton_clicked);
     connect(clear,&QAction::triggered,this,&MainWindow::on_ClearButton_clicked);
+    connect(save,&QAction::triggered,this,&MainWindow::SaveDevice);
+    connect(open,&QAction::triggered,this,&MainWindow::OpenDevice);
 
     //工具栏
     toolBar=new QToolBar(this);
@@ -70,11 +75,11 @@ MainWindow::MainWindow(QWidget *parent)
     stackPages->addWidget(infoPage);
     setCentralWidget(stackPages);
     //工具栏添加按钮用于切换界面
-    QAction *device=new QAction("device");
+    QAction *devicepage=new QAction("device");
     QAction *about=new QAction("about");
-    toolBar->addAction(device);
+    toolBar->addAction(devicepage);
     toolBar->addAction(about);
-    connect(device,&QAction::triggered,this,[this]{stackPages->setCurrentIndex(0);});
+    connect(devicepage,&QAction::triggered,this,[this]{stackPages->setCurrentIndex(0);});
     connect(about,&QAction::triggered,this,[this]{stackPages->setCurrentIndex(1);});
 }
 
@@ -149,6 +154,43 @@ void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
     }else QMessageBox::warning(this,"警告","设备已存在");
 
     //stsBar->showMessage(QString("当前设备数：%1").arg(ui->listWidget->count()));
+    updateStatus();
+}
+
+void MainWindow::SaveDevice()
+{
+    QString path=QFileDialog::getSaveFileName(this,"保存设备列表","D:\\Linux课件2025\\Linux课件2025\\Qt练习\\Device_gui_v2","文本文(*.txt)");
+    if(path.isEmpty()) return;
+
+    QFile file(path);
+    if(!file.open(QIODevice::WriteOnly)) return;
+
+    QTextStream out(&file);
+    for(int i=0;i<ui->listWidget->count();i++){
+        out<<ui->listWidget->item(i)->text()<<"\n";
+    }
+
+    file.close();
+}
+
+void MainWindow::OpenDevice()
+{
+    QString path=QFileDialog::getOpenFileName(this,"保存设备列表","D:\\Linux课件2025\\Linux课件2025\\Qt练习\\Device_gui_v2","文本文档(*.txt)");
+    if(path.isEmpty()) return;
+
+    QFile file(path);
+    if(!file.open(QIODevice::ReadOnly)) return;
+
+    QString all=file.readAll();
+    QStringList lines=all.split("\n");
+    for(auto eachline:lines){
+        if(eachline.isEmpty()){
+            break;
+        }
+        ui->listWidget->addItem(eachline);
+    }
+
+    file.close();
     updateStatus();
 }
 

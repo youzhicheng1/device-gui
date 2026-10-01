@@ -8,6 +8,14 @@
 #include <QDateTime>
 #include <QKeyEvent>
 #include <QStackedWidget>
+#include <QInputDialog>
+#include <QMessageBox>
+#include <QKeyEvent>
+#include <QLabel>
+#include <QFileDialog>
+#include <QFile>
+#include <QTextStream>
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -35,6 +43,8 @@ private slots:
 
     void on_listWidget_itemDoubleClicked(QListWidgetItem *item);
 
+    void SaveDevice();
+    void OpenDevice();
 private:
     Ui::MainWindow *ui;
     int device_count=0;
