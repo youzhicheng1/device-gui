@@ -188,6 +188,11 @@ void MainWindow::convertPicture(cv::Mat img)
         diameters.push_back(d);
         circularities.push_back(circ);
     }
+    //"标定"
+    bool ok;
+    double ratio=QInputDialog::getDouble(this,"标定","每像素多少微米？",1.0,0.001,1000,3,&ok);
+    if(!ok) return;
+    double pixperMicron=ratio;
     //统计
     ////面积
     double sum=0,maxA=0,minA=1e9;
@@ -206,6 +211,7 @@ void MainWindow::convertPicture(cv::Mat img)
         minD=std::min(minD,d);
     }
     double avgD=diameters.empty()?0:(sumD/diameters.size());
+    double realD=avgD*pixperMicron;
 
     ////圆度
     double sumC=0;
@@ -216,8 +222,8 @@ void MainWindow::convertPicture(cv::Mat img)
 
     // 显示
     QMessageBox::information(this, "颗粒统计",
-                             QString("颗粒数:%1\n平均面积:%2\n最大:%3 最小:%4\n平均直径：%5\n最大：%6 最小%7\n平均圆度：%8")
-                                 .arg(areas.size()).arg(avg).arg(maxA).arg(minA).arg(avgD).arg(maxD).arg(minD).arg(avgC));
+                             QString("颗粒数:%1\n平均面积:%2\n最大:%3 最小:%4\n平均直径：%5\n最大：%6 最小%7\n平均圆度：%8\n真实直径为：%9")
+                                 .arg(areas.size()).arg(avg).arg(maxA).arg(minA).arg(avgD).arg(maxD).arg(minD).arg(avgC).arg(realD));
 
     cv::Mat result=img.clone();
     cv::drawContours(result,contours,-1,cv::Scalar(0,255,0),2);
