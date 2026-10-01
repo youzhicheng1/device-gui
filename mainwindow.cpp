@@ -81,6 +81,17 @@ MainWindow::MainWindow(QWidget *parent)
     toolBar->addAction(about);
     connect(devicepage,&QAction::triggered,this,[this]{stackPages->setCurrentIndex(0);});
     connect(about,&QAction::triggered,this,[this]{stackPages->setCurrentIndex(1);});
+
+    //添加右键菜单
+    ui->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->listWidget,&QWidget::customContextMenuRequested,this,[this](const QPoint& pos){
+        QMenu menu(this);
+        menu.addAction("添加设备",this,&MainWindow::on_AddButton_clicked);
+        menu.addAction("删除设备",this,&MainWindow::on_DelButton_clicked);
+        menu.addAction("清空设备",this,&MainWindow::on_ClearButton_clicked);
+
+        menu.exec(ui->listWidget->mapToGlobal(pos));
+    });
 }
 
 MainWindow::~MainWindow()
