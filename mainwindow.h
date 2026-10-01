@@ -19,7 +19,9 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
 #include <QThread>
+#include "Analyzer.h"
 
+class Worker;
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -51,6 +53,7 @@ private slots:
     void SaveDevice();
     void OpenDevice();
     void OpenPicture();
+    void onAnalyzeDone(const statistics& ss);
 private:
     Ui::MainWindow *ui;
     int device_count=0;
@@ -60,21 +63,20 @@ private:
     QStackedWidget *stackPages=nullptr;
     QLabel* picture=nullptr;
     QLabel* picture1=nullptr;
+    Analyzer* aa=nullptr;
+    Worker* worker=nullptr;
+    QThread* thread=nullptr;
+    cv::Mat m_currentImg;//当前图
+signals:
+    void startAnalyze(const cv::Mat& img,double ratio);
 };
 
 class Worker:public QObject{
     Q_OBJECT
 public slots:
-    void dowork(){
-        for(int i=0;i<5;i++){
-            QThread::sleep(1);
-            emit progress(i+1);
-        }
-        emit finished();
-    }
+    void doAnalyze(const cv::Mat& img, double ratio);
 signals:
-    void progress(int);
-    void finished();
+    void analyzeDone(const statistics& ss);
 };
 
 #endif // MAINWINDOW_H

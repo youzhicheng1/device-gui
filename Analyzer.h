@@ -1,6 +1,7 @@
 #ifndef ANALYZER_H
 #define ANALYZER_H
 #include <opencv2/opencv.hpp>
+#include <QMetaType>
 
 typedef struct statistics{
     int count;//颗粒个数
@@ -14,9 +15,12 @@ typedef struct statistics{
     std::vector<std::vector<cv::Point>> contours;//轮廓
 }statistics;
 
+Q_DECLARE_METATYPE(statistics)
+
 class Analyzer{
 public:
     statistics analyze(const cv::Mat &img,double ratio) const;
+
 };
 
 

@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include <algorithm>
 #include "Analyzer.h"
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -120,16 +120,14 @@ MainWindow::MainWindow(QWidget *parent)
 
 
 
-    QThread* thread=new QThread(this);
-    Worker* worker=new Worker;
+    thread=new QThread(this);
+    worker=new Worker;
     worker->moveToThread(thread);
-    connect(thread,&QThread::started,worker,&Worker::dowork);
-    connect(worker,&Worker::finished,thread,&QThread::quit);
-    connect(worker,&Worker::progress,this,[](int p){
-        qDebug()<<"当前进度："<<p;
-    });
+    qRegisterMetaType<statistics>("statistics");
 
     thread->start();
+    connect(this,&MainWindow::startAnalyze,worker,&Worker::doAnalyze);   //叫ui来干活
+    connect(worker,&Worker::analyzeDone,this,&MainWindow::onAnalyzeDone);//ui收结果
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);  // 线程自我清理
 }
 
@@ -160,27 +158,13 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
 void MainWindow::convertPicture(cv::Mat img)
 {
-    Analyzer ana;
     //"标定"
     bool ok;
     double ratio=QInputDialog::getDouble(this,"标定","每像素多少微米？",1.0,0.001,1000,3,&ok);
     if(!ok) return;
 
-    statistics ss=ana.analyze(img,ratio);
-    // 显示
-    QMessageBox::information(this, "颗粒统计",
-                             QString("颗粒数:%1\n平均面积:%2\n最大:%3 最小:%4\n平均直径：%5\n最大：%6 最小%7\n平均圆度：%8\n真实直径为：%9")
-                                 .arg(ss.count).arg(ss.avgA).arg(ss.maxA).arg(ss.minA).arg(ss.avgD).arg(ss.maxD).arg(ss.minD).arg(ss.avgR).arg(ss.realD));
-
-    cv::Mat result=img.clone();
-    cv::drawContours(result,ss.contours,-1,cv::Scalar(0,255,0),2);
-
-    cv::Mat rgbResult;
-    cv::cvtColor(result,rgbResult,cv::COLOR_BGR2RGB);
-    QImage qres(rgbResult.data,rgbResult.cols,rgbResult.rows,rgbResult.step,QImage::Format_RGB888);
-
-
-    picture1->setPixmap(QPixmap::fromImage(qres.copy()));
+    m_currentImg=img;
+    emit startAnalyze(img,ratio);
 }
 
 
@@ -289,3 +273,26 @@ void MainWindow::OpenPicture()
     picture->setPixmap(pix);
 }
 
+void MainWindow::onAnalyzeDone(const statistics &ss)
+{
+    QMessageBox::information(this, "颗粒统计",
+                             QString("颗粒数:%1\n平均面积:%2\n最大:%3 最小:%4\n平均直径：%5\n最大：%6 最小%7\n平均圆度：%8\n真实直径为：%9")
+                                 .arg(ss.count).arg(ss.avgA).arg(ss.maxA).arg(ss.minA).arg(ss.avgD).arg(ss.maxD).arg(ss.minD).arg(ss.avgR).arg(ss.realD));
+
+    cv::Mat result=m_currentImg.clone();
+    cv::drawContours(result,ss.contours,-1,cv::Scalar(0,255,0),2);
+
+    cv::Mat rgbResult;
+    cv::cvtColor(result,rgbResult,cv::COLOR_BGR2RGB);
+    QImage qres(rgbResult.data,rgbResult.cols,rgbResult.rows,rgbResult.step,QImage::Format_RGB888);
+
+
+    picture1->setPixmap(QPixmap::fromImage(qres.copy()));
+}
+
+
+void Worker::doAnalyze(const cv::Mat &img, double ratio)
+{
+    Analyzer ana;
+    emit analyzeDone(ana.analyze(img,ratio));
+}
