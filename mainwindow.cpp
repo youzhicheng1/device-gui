@@ -136,10 +136,10 @@ MainWindow::MainWindow(QWidget *parent)
     minArealine->addWidget(m_minArea);
     rightpanel->addLayout(minArealine);
     //分析按钮
-    QPushButton* AnalyzeButton=new QPushButton(picturePage);AnalyzeButton->setText("Analyze");
+    m_analyzeButton=new QPushButton(picturePage);m_analyzeButton->setText("Analyze");
     rb_none->setChecked(true);
-    connect(AnalyzeButton,&QPushButton::clicked,this,&MainWindow::onAnalyzeClick);
-    rightpanel->addWidget(AnalyzeButton);
+    connect(m_analyzeButton,&QPushButton::clicked,this,&MainWindow::onAnalyzeClick);
+    rightpanel->addWidget(m_analyzeButton);
     //导出按钮
     QPushButton* ExportButton=new QPushButton(picturePage);ExportButton->setText("Export CSV");
     connect(ExportButton,&QPushButton::clicked,this,&MainWindow::onExportCsv);
@@ -367,13 +367,23 @@ void MainWindow::onAnalyzeDone(const statistics &ss)
 
 
     picture1->setPixmap(QPixmap::fromImage(qres.copy()));
+
+    m_busy=false;
+    m_analyzeButton->setDisabled(false);
+    m_analyzeButton->setText("Analyze");
 }
 
 void MainWindow::onAnalyzeClick()
 {
     if(m_currentImg.empty()) return;
-    m_lastParams=collectParams();
-    emit startAnalyze(m_currentImg,m_ratio,collectParams());
+    if(m_busy) return;
+
+    m_busy=true;
+    m_analyzeButton->setDisabled(true);
+    m_analyzeButton->setText("分析中...");
+    AnalyzeParams p = collectParams();   // 只取一次
+    m_lastParams = p;                    // 存快照
+    emit startAnalyze(m_currentImg, m_ratio, p);   // 发同一份
 }
 
 void MainWindow::onExportCsv()

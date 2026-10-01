@@ -79,6 +79,9 @@ private:
     double       m_ratio=0;                 //标定比例
     statistics   m_lastResult;              //上次分析结果(导出用)
     AnalyzeParams m_lastParams;             //上次分析用的参数(导出用)
+    QPushButton* m_analyzeButton=nullptr;
+    bool m_busy=false;
+
 
 signals:
     void startAnalyze(const cv::Mat& img,double ratio,const AnalyzeParams& params);
