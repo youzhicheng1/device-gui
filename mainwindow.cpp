@@ -100,10 +100,10 @@ MainWindow::MainWindow(QWidget *parent)
     //阈值行
     QHBoxLayout* thresholdline=new QHBoxLayout(picturePage);
     QLabel* thresholdname=new QLabel(picturePage);thresholdname->setText("Threshold");
-    QSlider* thresholdSlider=new QSlider(picturePage);thresholdSlider->setOrientation(Qt::Horizontal);thresholdSlider->setRange(0,255);thresholdSlider->setValue(127);
+    m_thresholdSlider=new QSlider(picturePage);m_thresholdSlider->setOrientation(Qt::Horizontal);m_thresholdSlider->setRange(0,255);m_thresholdSlider->setValue(127);
     QLabel* thresholdValue=new QLabel(picturePage);
     thresholdline->addWidget(thresholdname);
-    thresholdline->addWidget(thresholdSlider);
+    thresholdline->addWidget(m_thresholdSlider);
     thresholdline->addWidget(thresholdValue);
     rightpanel->addLayout(thresholdline);
     //形态学
@@ -112,10 +112,10 @@ MainWindow::MainWindow(QWidget *parent)
     QRadioButton* rb_none  = new QRadioButton("none");
     QRadioButton* rb_open  = new QRadioButton("open");
     QRadioButton* rb_close = new QRadioButton("close");
-    QButtonGroup* grp = new QButtonGroup(this);   // ← 新面孔,作用:组内互斥
-    grp->addButton(rb_none,  0);   // 第二个参数是 id
-    grp->addButton(rb_open,  1);
-    grp->addButton(rb_close, 2);
+    m_morphGroup = new QButtonGroup(this);   // ← 新面孔,作用:组内互斥
+    m_morphGroup->addButton(rb_none,  0);   // 第二个参数是 id
+    m_morphGroup->addButton(rb_open,  1);
+    m_morphGroup->addButton(rb_close, 2);
     morphline->addWidget(morphname);
     morphline->addWidget(rb_none);
     morphline->addWidget(rb_open);
@@ -124,19 +124,21 @@ MainWindow::MainWindow(QWidget *parent)
     //核大小
     QHBoxLayout* kernelSizeline=new QHBoxLayout(picturePage);
     QLabel* kernelSizename=new QLabel(picturePage);kernelSizename->setText("kernelSize");
-    QSpinBox* kernelSizeSpinbox=new QSpinBox(picturePage);kernelSizeSpinbox->setRange(1,15);kernelSizeSpinbox->setValue(3);
+    m_kernelSize=new QSpinBox(picturePage);m_kernelSize->setRange(1,15);m_kernelSize->setValue(3);
     kernelSizeline->addWidget(kernelSizename);
-    kernelSizeline->addWidget(kernelSizeSpinbox);
+    kernelSizeline->addWidget(m_kernelSize);
     rightpanel->addLayout(kernelSizeline);
     //最小面积
     QHBoxLayout* minArealine=new QHBoxLayout(picturePage);
     QLabel* minAreaname=new QLabel(picturePage);minAreaname->setText("minArea");
-    QSpinBox* minAreaSpinbox=new QSpinBox(picturePage);minAreaSpinbox->setRange(1,1000);minAreaSpinbox->setValue(10);
+    m_minArea=new QSpinBox(picturePage);m_minArea->setRange(1,1000);m_minArea->setValue(10);
     minArealine->addWidget(minAreaname);
-    minArealine->addWidget(minAreaSpinbox);
+    minArealine->addWidget(m_minArea);
     rightpanel->addLayout(minArealine);
     //分析按钮
     QPushButton* AnalyzeButton=new QPushButton(picturePage);AnalyzeButton->setText("Analyze");
+    rb_none->setChecked(true);
+    connect(AnalyzeButton,&QPushButton::clicked,this,&MainWindow::onAnalyzeClick);
     rightpanel->addWidget(AnalyzeButton);
     //放入布局
     page2layout->addLayout(leftlayout);
@@ -217,7 +219,19 @@ void MainWindow::convertPicture(cv::Mat img)
     if(!ok) return;
 
     m_currentImg=img;
-    emit startAnalyze(img,ratio);
+    m_ratio=ratio;
+    emit startAnalyze(m_currentImg,m_ratio,collectParams());
+}
+
+AnalyzeParams MainWindow::collectParams() const
+{
+    AnalyzeParams p;
+    p.threshold  = m_thresholdSlider->value();   // 滑条当前值 0-255
+    int t        = m_morphGroup->checkedId();    // 0/1/2
+    p.morphType  = (t < 0) ? 0 : t;              // 兜底:没选中=不处理
+    p.kernelSize = m_kernelSize->value();
+    p.minArea    = m_minArea->value();
+    return p;
 }
 
 
@@ -343,10 +357,17 @@ void MainWindow::onAnalyzeDone(const statistics &ss)
     picture1->setPixmap(QPixmap::fromImage(qres.copy()));
 }
 
+void MainWindow::onAnalyzeClick()
+{
+    if(m_currentImg.empty()) return;
+    emit startAnalyze(m_currentImg,m_ratio,collectParams());
+}
 
-void Worker::doAnalyze(const cv::Mat &img, double ratio)
+
+
+
+void Worker::doAnalyze(const cv::Mat &img, double ratio,const AnalyzeParams& params)
 {
     Analyzer ana;
-    AnalyzeParams p;
-    emit analyzeDone(ana.analyze(img,ratio,p));
+    emit analyzeDone(ana.analyze(img,ratio,params));
 }

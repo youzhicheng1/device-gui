@@ -43,7 +43,7 @@ public:
     QString timeupdate();
     void keyPressEvent(QKeyEvent* event) override;
     void convertPicture(cv::Mat img);
-
+    AnalyzeParams collectParams() const;
 private slots:
     void on_AddButton_clicked();
 
@@ -57,6 +57,7 @@ private slots:
     void OpenDevice();
     void OpenPicture();
     void onAnalyzeDone(const statistics& ss);
+    void onAnalyzeClick();
 private:
     Ui::MainWindow *ui;
     int device_count=0;
@@ -69,15 +70,21 @@ private:
     Analyzer* aa=nullptr;
     Worker* worker=nullptr;
     QThread* thread=nullptr;
-    cv::Mat m_currentImg;//当前图
+    cv::Mat m_currentImg;                   //当前图
+    QSlider*     m_thresholdSlider=nullptr; //阈值滑条
+    QButtonGroup* m_morphGroup=nullptr;     //形态学类型按钮
+    QSpinBox*    m_kernelSize=nullptr;      //核大小编辑框
+    QSpinBox*    m_minArea=nullptr;         //最小面积编辑框
+    double       m_ratio=0;                 //标定比例
+
 signals:
-    void startAnalyze(const cv::Mat& img,double ratio);
+    void startAnalyze(const cv::Mat& img,double ratio,const AnalyzeParams& params);
 };
 
 class Worker:public QObject{
     Q_OBJECT
 public slots:
-    void doAnalyze(const cv::Mat& img, double ratio);
+    void doAnalyze(const cv::Mat& img, double ratio,const AnalyzeParams& params);
 signals:
     void analyzeDone(const statistics& ss);
 };
