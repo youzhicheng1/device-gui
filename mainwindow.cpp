@@ -159,12 +159,23 @@ void MainWindow::convertPicture(cv::Mat img)
     cv::findContours(binary,contours,cv::RETR_EXTERNAL,cv::CHAIN_APPROX_SIMPLE);
     //筛选颗粒
     std::vector<double> areas;
+    std::vector<double> diameters;
+    std::vector<double> circularities;
     for(const auto &c:contours){
         double area=cv::contourArea(c);
         if(area<10) continue;
         areas.push_back(area);
+        //直径
+        double d=2*std::sqrt(area/CV_PI);
+        //圆度
+        double p=cv::arcLength(c,true);
+        double circ=4*CV_PI*area/(p*p);
+
+        diameters.push_back(d);
+        circularities.push_back(circ);
     }
     //统计
+    ////面积
     double sum=0,maxA=0,minA=1e9;
     for(double a:areas){
         sum+=a;
@@ -173,10 +184,26 @@ void MainWindow::convertPicture(cv::Mat img)
     }
     double avg=areas.empty()?0:(sum/areas.size());
 
+    ////直径
+    double sumD=0,maxD=0,minD=1e9;
+    for(double d:diameters){
+        sumD+=d;
+        maxD=std::max(maxD,d);
+        minD=std::min(minD,d);
+    }
+    double avgD=diameters.empty()?0:(sumD/diameters.size());
+
+    ////圆度
+    double sumC=0;
+    for(double C:circularities){
+        sumC+=C;
+    }
+    double avgC=circularities.empty()?0:(sumC/circularities.size());
+
     // 显示
     QMessageBox::information(this, "颗粒统计",
-                             QString("颗粒数:%1\n平均面积:%2\n最大:%3\n最小:%4")
-                                 .arg(areas.size()).arg(avg).arg(maxA).arg(minA));
+                             QString("颗粒数:%1\n平均面积:%2\n最大:%3 最小:%4\n平均直径：%5\n最大：%6 最小%7\n平均圆度：%8")
+                                 .arg(areas.size()).arg(avg).arg(maxA).arg(minA).arg(avgD).arg(maxD).arg(minD).arg(avgC));
 
     cv::Mat result=img.clone();
     cv::drawContours(result,contours,-1,cv::Scalar(0,255,0),2);
