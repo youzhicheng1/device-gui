@@ -69,5 +69,28 @@ statistics Analyzer::analyze(const cv::Mat &img, double ratio,const AnalyzeParam
     }
     ss.avgR=circularities.empty()?0:(sumC/circularities.size());
 
+    //粒径分布
+    std::sort(diameters.begin(),diameters.end());
+    std::vector<double> distribution;//粒径分布
+    std::vector<double> micron;//微米数组
+    int N=diameters.size();
+    for(auto p:diameters) micron.push_back(p*ratio);
+
+    auto percentile=[&](double p)->double{
+        if(micron.empty()) return 0.0;
+        if(micron.size()==1) return micron[0];
+
+        double position=p/100.0*(N-1);
+        int idx=(int)position;
+        double frac=position-idx;
+        if(idx>=N-1) return micron[N-1];
+        return micron[idx]+frac*(micron[idx+1]-micron[idx]);
+    };
+
+    ss.d10=percentile(10);
+    ss.d50=percentile(50);
+    ss.d90=percentile(90);
+    ss.span = (ss.d50 > 0) ? (ss.d90 - ss.d10) / ss.d50 : 0.0;
+
     return ss;
 }

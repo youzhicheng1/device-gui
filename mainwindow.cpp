@@ -343,8 +343,11 @@ void MainWindow::OpenPicture()
 void MainWindow::onAnalyzeDone(const statistics &ss)
 {
     QMessageBox::information(this, "颗粒统计",
-                             QString("颗粒数:%1\n平均面积:%2\n最大:%3 最小:%4\n平均直径：%5\n最大：%6 最小%7\n平均圆度：%8\n真实直径为：%9")
-                                 .arg(ss.count).arg(ss.avgA).arg(ss.maxA).arg(ss.minA).arg(ss.avgD).arg(ss.maxD).arg(ss.minD).arg(ss.avgR).arg(ss.realD));
+                             QString("颗粒数:%1\n平均面积:%2\n最大:%3 最小:%4\n平均直径：%5\n最大：%6 最小%7\n平均圆度：%8\n真实直径为：%9"
+                                     "—— 粒径分布 ——\nD10:%10  D50:%11  D90:%12\n跨度span:%13")
+                                .arg(ss.count).arg(ss.avgA).arg(ss.maxA).arg(ss.minA)
+                                .arg(ss.avgD).arg(ss.maxD).arg(ss.minD).arg(ss.avgR).arg(ss.realD)
+                                .arg(ss.d10).arg(ss.d50).arg(ss.d90).arg(ss.span));
 
     cv::Mat result=m_currentImg.clone();
     cv::drawContours(result,ss.contours,-1,cv::Scalar(0,255,0),2);

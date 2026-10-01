@@ -2,6 +2,7 @@
 #define ANALYZER_H
 #include <opencv2/opencv.hpp>
 #include <QMetaType>
+#include <algorithm>
 
 typedef struct statistics{
     int count;//颗粒个数
@@ -13,6 +14,8 @@ typedef struct statistics{
     double avgA,maxA,minA;//面积
 
     std::vector<std::vector<cv::Point>> contours;//轮廓
+
+    double d10=0, d50=0, d90=0, span=0;   // 粒径分布
 }statistics;
 
 Q_DECLARE_METATYPE(statistics)
