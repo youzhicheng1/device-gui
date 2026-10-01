@@ -87,6 +87,9 @@ statistics Analyzer::analyze(const cv::Mat &img, double ratio,const AnalyzeParam
         return micron[idx]+frac*(micron[idx+1]-micron[idx]);
     };
 
+    for(int i=0;i<=100;i+=5){
+        ss.curve.push_back(percentile(i));
+    }
     ss.d10=percentile(10);
     ss.d50=percentile(50);
     ss.d90=percentile(90);

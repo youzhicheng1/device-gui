@@ -58,6 +58,7 @@ private slots:
     void OpenPicture();
     void onAnalyzeDone(const statistics& ss);
     void onAnalyzeClick();
+    void onExportCsv();
 private:
     Ui::MainWindow *ui;
     int device_count=0;
@@ -76,6 +77,8 @@ private:
     QSpinBox*    m_kernelSize=nullptr;      //核大小编辑框
     QSpinBox*    m_minArea=nullptr;         //最小面积编辑框
     double       m_ratio=0;                 //标定比例
+    statistics   m_lastResult;              //上次分析结果(导出用)
+    AnalyzeParams m_lastParams;             //上次分析用的参数(导出用)
 
 signals:
     void startAnalyze(const cv::Mat& img,double ratio,const AnalyzeParams& params);

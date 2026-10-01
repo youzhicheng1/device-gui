@@ -16,6 +16,8 @@ typedef struct statistics{
     std::vector<std::vector<cv::Point>> contours;//轮廓
 
     double d10=0, d50=0, d90=0, span=0;   // 粒径分布
+
+    std::vector<double> curve;
 }statistics;
 
 Q_DECLARE_METATYPE(statistics)

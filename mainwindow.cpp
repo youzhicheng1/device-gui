@@ -140,6 +140,10 @@ MainWindow::MainWindow(QWidget *parent)
     rb_none->setChecked(true);
     connect(AnalyzeButton,&QPushButton::clicked,this,&MainWindow::onAnalyzeClick);
     rightpanel->addWidget(AnalyzeButton);
+    //导出按钮
+    QPushButton* ExportButton=new QPushButton(picturePage);ExportButton->setText("Export CSV");
+    connect(ExportButton,&QPushButton::clicked,this,&MainWindow::onExportCsv);
+    rightpanel->addWidget(ExportButton);
     //放入布局
     page2layout->addLayout(leftlayout);
     page2layout->addLayout(rightpanel);
@@ -220,6 +224,7 @@ void MainWindow::convertPicture(cv::Mat img)
 
     m_currentImg=img;
     m_ratio=ratio;
+    m_lastParams=collectParams();
     emit startAnalyze(m_currentImg,m_ratio,collectParams());
 }
 
@@ -342,6 +347,7 @@ void MainWindow::OpenPicture()
 
 void MainWindow::onAnalyzeDone(const statistics &ss)
 {
+    m_lastResult=ss;
     QMessageBox::information(this, "颗粒统计",
                              QString("颗粒数:%1\n平均面积:%2\n最大:%3 最小:%4\n平均直径：%5\n最大：%6 最小%7\n平均圆度：%8\n真实直径为：%9"
                                      "—— 粒径分布 ——\nD10:%10  D50:%11  D90:%12\n跨度span:%13")
@@ -363,7 +369,47 @@ void MainWindow::onAnalyzeDone(const statistics &ss)
 void MainWindow::onAnalyzeClick()
 {
     if(m_currentImg.empty()) return;
+    m_lastParams=collectParams();
     emit startAnalyze(m_currentImg,m_ratio,collectParams());
+}
+
+void MainWindow::onExportCsv()
+{
+    if(m_lastResult.curve.empty()){
+        QMessageBox::warning(this,"提示","请先分析一张图片");
+        return;
+    }
+
+    QString path = QFileDialog::getSaveFileName(this,"导出检测报告","","CSV 文件(*.csv)");
+    if(path.isEmpty()) return;
+
+    QFile file(path);
+    if(!file.open(QIODevice::WriteOnly)) return;
+
+    QTextStream out(&file);
+    out.setEncoding(QStringConverter::Utf8);
+    out << "\xEF\xBB\xBF";     // BOM:让 Excel 认 UTF-8
+
+    // ① 参数行(用 m_lastParams)
+    out << QString("# 参数: threshold=%1, morphType=%2, kernelSize=%3, minArea=%4, ratio=%5\n")
+               .arg(m_lastParams.threshold).arg(m_lastParams.morphType)
+               .arg(m_lastParams.kernelSize).arg(m_lastParams.minArea)
+               .arg(m_ratio, 0, 'f', 3);
+
+    // ② 统计行(用 m_lastResult)
+    out << QString("# 统计: count=%1, D10=%2, D50=%3, D90=%4, span=%5\n")
+               .arg(m_lastResult.count)
+               .arg(m_lastResult.d10, 0, 'f', 2).arg(m_lastResult.d50, 0, 'f', 2)
+               .arg(m_lastResult.d90, 0, 'f', 2).arg(m_lastResult.span, 0, 'f', 3);
+
+    // ③ 21 点表(你来写)
+    out << "percentile,size_um\n";
+    for(int i = 0; i < (int)m_lastResult.curve.size(); i++){
+        out << (i * 5) << "," << m_lastResult.curve[i] << "\n"; // 第3行:写一行"百分位,粒径"
+    }
+
+    file.close();
+    QMessageBox::information(this,"完成","已导出 CSV");
 }
 
 
