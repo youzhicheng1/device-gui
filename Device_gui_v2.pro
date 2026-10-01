@@ -26,7 +26,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 RESOURCES += \
     resource.qrc
 
-DISTFILES +=
+DISTFILES += \
+    CMakeLists.txt
 
 #opencv配置
 INCLUDEPATH+=D:/opencv/opencv/build/include
