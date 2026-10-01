@@ -45,6 +45,13 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QPushButton" name="ConnectButton">
+       <property name="text">
+        <string>connect</string>
+       </property>
+      </widget>
+     </item>
     </layout>
    </widget>
    <widget class="QListWidget" name="listWidget">

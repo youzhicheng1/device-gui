@@ -91,14 +91,14 @@ MainWindow::MainWindow(QWidget *parent)
     picture->setScaledContents(true);
     picture1=new QLabel(picturePage);
     picture1->setScaledContents(true);
-    QVBoxLayout* leftlayout=new QVBoxLayout(picturePage);
+    QVBoxLayout* leftlayout=new QVBoxLayout();
     leftlayout->addWidget(picture);
     leftlayout->addWidget(picture1);
 
     //右侧布局
-    QVBoxLayout* rightpanel=new QVBoxLayout(picturePage);
+    QVBoxLayout* rightpanel=new QVBoxLayout();
     //阈值行
-    QHBoxLayout* thresholdline=new QHBoxLayout(picturePage);
+    QHBoxLayout* thresholdline=new QHBoxLayout();
     QLabel* thresholdname=new QLabel(picturePage);thresholdname->setText("Threshold");
     m_thresholdSlider=new QSlider(picturePage);m_thresholdSlider->setOrientation(Qt::Horizontal);m_thresholdSlider->setRange(0,255);m_thresholdSlider->setValue(127);
     QLabel* thresholdValue=new QLabel(picturePage);
@@ -107,7 +107,7 @@ MainWindow::MainWindow(QWidget *parent)
     thresholdline->addWidget(thresholdValue);
     rightpanel->addLayout(thresholdline);
     //形态学
-    QHBoxLayout* morphline=new QHBoxLayout(picturePage);
+    QHBoxLayout* morphline=new QHBoxLayout();
     QLabel* morphname=new QLabel(picturePage);morphname->setText("morph");
     QRadioButton* rb_none  = new QRadioButton("none");
     QRadioButton* rb_open  = new QRadioButton("open");
@@ -122,26 +122,26 @@ MainWindow::MainWindow(QWidget *parent)
     morphline->addWidget(rb_close);
     rightpanel->addLayout(morphline);
     //核大小
-    QHBoxLayout* kernelSizeline=new QHBoxLayout(picturePage);
+    QHBoxLayout* kernelSizeline=new QHBoxLayout();
     QLabel* kernelSizename=new QLabel(picturePage);kernelSizename->setText("kernelSize");
     m_kernelSize=new QSpinBox(picturePage);m_kernelSize->setRange(1,15);m_kernelSize->setValue(3);
     kernelSizeline->addWidget(kernelSizename);
     kernelSizeline->addWidget(m_kernelSize);
     rightpanel->addLayout(kernelSizeline);
     //最小面积
-    QHBoxLayout* minArealine=new QHBoxLayout(picturePage);
+    QHBoxLayout* minArealine=new QHBoxLayout();
     QLabel* minAreaname=new QLabel(picturePage);minAreaname->setText("minArea");
     m_minArea=new QSpinBox(picturePage);m_minArea->setRange(1,1000);m_minArea->setValue(10);
     minArealine->addWidget(minAreaname);
     minArealine->addWidget(m_minArea);
     rightpanel->addLayout(minArealine);
     //分析按钮
-    m_analyzeButton=new QPushButton(picturePage);m_analyzeButton->setText("Analyze");
+    m_analyzeButton=new QPushButton();m_analyzeButton->setText("Analyze");
     rb_none->setChecked(true);
     connect(m_analyzeButton,&QPushButton::clicked,this,&MainWindow::onAnalyzeClick);
     rightpanel->addWidget(m_analyzeButton);
     //导出按钮
-    QPushButton* ExportButton=new QPushButton(picturePage);ExportButton->setText("Export CSV");
+    QPushButton* ExportButton=new QPushButton();ExportButton->setText("Export CSV");
     connect(ExportButton,&QPushButton::clicked,this,&MainWindow::onExportCsv);
     rightpanel->addWidget(ExportButton);
     //放入布局
@@ -189,6 +189,12 @@ MainWindow::MainWindow(QWidget *parent)
     connect(worker,&Worker::analyzeDone,this,&MainWindow::onAnalyzeDone);//ui收结果
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);  // 线程自我清理
     connect(thread,&QThread::finished,worker,&QThread::deleteLater);
+
+    //设备信号连接
+    connect(&m_socket, &QTcpSocket::connected,     this, &MainWindow::onSocketConnected);
+    connect(&m_socket, &QTcpSocket::disconnected,  this, &MainWindow::onSocketDisConnected);
+    connect(&m_socket, &QTcpSocket::readyRead,     this, &MainWindow::onSocketReadyRead);
+    connect(&m_socket, &QTcpSocket::errorOccurred, this, &MainWindow::onSocketError);
 }
 
 MainWindow::~MainWindow()
@@ -201,7 +207,9 @@ MainWindow::~MainWindow()
 
 void MainWindow::updateStatus()
 {
-    stsBar->showMessage(QString("当前设备数：%1 | 当前时间：%2").arg(ui->listWidget->count()).arg(timeupdate()));
+    stsBar->showMessage(QString("当前设备数：%1 | 当前时间：%2 | %3")
+                            .arg(ui->listWidget->count())
+                            .arg(timeupdate()));
 }
 
 QString MainWindow::timeupdate()
@@ -433,3 +441,38 @@ void Worker::doAnalyze(const cv::Mat &img, double ratio,const AnalyzeParams& par
     Analyzer ana;
     emit analyzeDone(ana.analyze(img,ratio,params));
 }
+
+void MainWindow::on_ConnectButton_clicked()
+{
+    if(m_socket.state()==QAbstractSocket::ConnectedState){
+        m_socket.disconnectFromHost();
+    }else{
+        m_socket.connectToHost("127.0.0.1",8888);
+    }
+}
+
+void MainWindow::onSocketConnected()
+{
+    ui->ConnectButton->setText("ToDisConnected");
+    qDebug()<<"device connected\n";
+    m_socket.write("hello\n");
+}
+
+void MainWindow::onSocketDisConnected()
+{
+    ui->ConnectButton->setText("ToConnected");
+    qDebug()<<"device disconnected\n";
+}
+
+void MainWindow::onSocketReadyRead()
+{
+    qDebug()<<"device ready to read\n";
+    QByteArray data=m_socket.readAll();
+    qDebug()<<"recv: "<<data;
+}
+
+void MainWindow::onSocketError()
+{
+    qDebug() << "socket error:" << m_socket.errorString();
+}
+

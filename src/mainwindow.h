@@ -22,6 +22,7 @@
 #include <QSpinBox>
 #include <QRadioButton>
 #include <QButtonGroup>
+#include <QTcpSocket>
 #include "Analyzer.h"
 
 class Worker;
@@ -59,6 +60,14 @@ private slots:
     void onAnalyzeDone(const statistics& ss);
     void onAnalyzeClick();
     void onExportCsv();
+
+    //连接设备相关
+    void on_ConnectButton_clicked();
+    void onSocketConnected();
+    void onSocketDisConnected();
+    void onSocketReadyRead();
+    void onSocketError();
+
 private:
     Ui::MainWindow *ui;
     int device_count=0;
@@ -81,7 +90,9 @@ private:
     AnalyzeParams m_lastParams;             //上次分析用的参数(导出用)
     QPushButton* m_analyzeButton=nullptr;
     bool m_busy=false;
-
+    QTcpSocket m_socket;                   //单设备socket
+    //多设备暂时不写
+    //std::vector<std::pair<QTcpSocket*,bool>> devices;
 
 signals:
     void startAnalyze(const cv::Mat& img,double ratio,const AnalyzeParams& params);
