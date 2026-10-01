@@ -35,6 +35,7 @@ public:
     void updateStatus();
     QString timeupdate();
     void keyPressEvent(QKeyEvent* event) override;
+    void convertPicture(cv::Mat img);
 
 private slots:
     void on_AddButton_clicked();
@@ -56,5 +57,6 @@ private:
     QToolBar* toolBar=nullptr;
     QStackedWidget *stackPages=nullptr;
     QLabel* picture=nullptr;
+    QLabel* picture1=nullptr;
 };
 #endif // MAINWINDOW_H

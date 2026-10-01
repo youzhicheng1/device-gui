@@ -81,9 +81,11 @@ MainWindow::MainWindow(QWidget *parent)
     //页面2将图片放入布局中
     picture=new QLabel(picturePage);
     picture->setScaledContents(true);
-    picture->setAlignment(Qt::AlignCenter);
+    picture1=new QLabel(picturePage);
+    picture1->setScaledContents(true);
     QVBoxLayout* lay3=new QVBoxLayout(picturePage);
     lay3->addWidget(picture);
+    lay3->addWidget(picture1);
 
     //加入界面
     stackPages->addWidget(devicePage);
@@ -138,6 +140,19 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         delete ui->listWidget->takeItem(ui->listWidget->currentRow());
         updateStatus();
     }
+}
+
+void MainWindow::convertPicture(cv::Mat img)
+{
+    cv::Mat gray;
+    cv::cvtColor(img,gray,cv::COLOR_BGR2GRAY);
+
+    cv::Mat binary;
+    cv::threshold(gray,binary,127,255,cv::THRESH_BINARY);
+
+    QImage qbin(binary.data,binary.cols,binary.rows,binary.step,QImage::Format_Grayscale8);
+
+    picture1->setPixmap(QPixmap::fromImage(qbin.copy()));
 }
 
 
@@ -236,6 +251,7 @@ void MainWindow::OpenPicture()
 
     cv::Mat img = cv::imread(path.toLocal8Bit().toStdString());
     if(img.empty()) QMessageBox::warning(this,"错误","图片打开失败");
+    convertPicture(img);
 
     cv::Mat rgb;
     cv::cvtColor(img,rgb,cv::COLOR_BGR2RGB);
