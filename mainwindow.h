@@ -17,6 +17,7 @@
 #include <QTextStream>
 #include <QPixmap>
 #include <opencv2/opencv.hpp>
+#include <opencv2/imgproc.hpp>
 
 
 QT_BEGIN_NAMESPACE

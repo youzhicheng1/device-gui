@@ -152,7 +152,20 @@ void MainWindow::convertPicture(cv::Mat img)
 
     QImage qbin(binary.data,binary.cols,binary.rows,binary.step,QImage::Format_Grayscale8);
 
-    picture1->setPixmap(QPixmap::fromImage(qbin.copy()));
+    std::vector<std::vector<cv::Point>> contours;
+    cv::findContours(binary,contours,cv::RETR_EXTERNAL,cv::CHAIN_APPROX_SIMPLE);
+
+    QMessageBox::information(this, "结果", QString("检测到 %1 个轮廓").arg(contours.size()));
+
+    cv::Mat result=img.clone();
+    cv::drawContours(result,contours,-1,cv::Scalar(0,255,0),2);
+
+    cv::Mat rgbResult;
+    cv::cvtColor(result,rgbResult,cv::COLOR_BGR2RGB);
+    QImage qres(rgbResult.data,rgbResult.cols,rgbResult.rows,rgbResult.step,QImage::Format_RGB888);
+
+
+    picture1->setPixmap(QPixmap::fromImage(qres.copy()));
 }
 
 
