@@ -7,6 +7,7 @@
 #include <QTimer>
 #include <QDateTime>
 #include <QKeyEvent>
+#include <QStackedWidget>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -40,5 +41,6 @@ private:
     QStatusBar* stsBar=nullptr;
     QMenuBar* mnBar=nullptr;
     QToolBar* toolBar=nullptr;
+    QStackedWidget *stackPages=nullptr;
 };
 #endif // MAINWINDOW_H

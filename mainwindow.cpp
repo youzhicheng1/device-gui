@@ -3,6 +3,7 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QKeyEvent>
+#include <QLabel>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -48,7 +49,33 @@ MainWindow::MainWindow(QWidget *parent)
     connect(timer,&QTimer::timeout,this,&MainWindow::updateStatus);
     timer->start(1000);
 
-    stsBar=statusBar();//状态栏
+    //状态栏
+    stsBar=statusBar();
+
+    //多页面
+    stackPages=new QStackedWidget(this);
+    QWidget* devicePage=new QWidget(this);
+    QWidget* infoPage=new QWidget(this);
+    //将散落的按钮放入布局便于添加进页面0
+    QVBoxLayout* layout=new QVBoxLayout(devicePage);
+    layout->addWidget(ui->horizontalLayoutWidget);
+    layout->addWidget(ui->listWidget);
+    //页面2显示设备管理并添加布局居中
+    QLabel* info=new QLabel("设备管理 v5 ",infoPage);
+    info->setAlignment(Qt::AlignCenter);
+    QVBoxLayout* lay2=new QVBoxLayout(infoPage);
+    lay2->addWidget(info);
+    //加入界面
+    stackPages->addWidget(devicePage);
+    stackPages->addWidget(infoPage);
+    setCentralWidget(stackPages);
+    //工具栏添加按钮用于切换界面
+    QAction *device=new QAction("device");
+    QAction *about=new QAction("about");
+    toolBar->addAction(device);
+    toolBar->addAction(about);
+    connect(device,&QAction::triggered,this,[this]{stackPages->setCurrentIndex(0);});
+    connect(about,&QAction::triggered,this,[this]{stackPages->setCurrentIndex(1);});
 }
 
 MainWindow::~MainWindow()
