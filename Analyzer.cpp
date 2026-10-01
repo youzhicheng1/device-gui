@@ -1,7 +1,7 @@
 #include "Analyzer.h"
 
 
-statistics Analyzer::analyze(const cv::Mat &img, double ratio) const
+statistics Analyzer::analyze(const cv::Mat &img, double ratio,const AnalyzeParams& params) const
 {
     statistics ss;
     //灰度图
@@ -9,7 +9,14 @@ statistics Analyzer::analyze(const cv::Mat &img, double ratio) const
     cv::cvtColor(img,gray,cv::COLOR_BGR2GRAY);
     //二值图
     cv::Mat binary;
-    cv::threshold(gray,binary,127,255,cv::THRESH_BINARY);
+    cv::threshold(gray,binary,params.threshold,255,cv::THRESH_BINARY);
+    if(params.morphType!=0){
+        cv::Mat kernel=cv::getStructuringElement(cv::MORPH_RECT,cv::Size(params.kernelSize,params.kernelSize));
+        cv::Mat clean;
+        int op=(params.morphType==1)?cv::MORPH_OPEN:cv::MORPH_CLOSE;
+        cv::morphologyEx(binary,clean,op,kernel);
+        binary=clean;
+    }
     //寻找轮廓
     cv::findContours(binary,ss.contours,cv::RETR_EXTERNAL,cv::CHAIN_APPROX_SIMPLE);
 
@@ -19,7 +26,7 @@ statistics Analyzer::analyze(const cv::Mat &img, double ratio) const
     std::vector<double> circularities;
     for(const auto &c:ss.contours){
         double area=cv::contourArea(c);
-        if(area<10) continue;
+        if(area<params.minArea) continue;
         areas.push_back(area);
         //直径
         double d=2*std::sqrt(area/CV_PI);

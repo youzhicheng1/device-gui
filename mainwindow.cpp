@@ -294,5 +294,6 @@ void MainWindow::onAnalyzeDone(const statistics &ss)
 void Worker::doAnalyze(const cv::Mat &img, double ratio)
 {
     Analyzer ana;
-    emit analyzeDone(ana.analyze(img,ratio));
+    AnalyzeParams p;
+    emit analyzeDone(ana.analyze(img,ratio,p));
 }

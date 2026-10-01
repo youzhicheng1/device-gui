@@ -17,9 +17,17 @@ typedef struct statistics{
 
 Q_DECLARE_METATYPE(statistics)
 
+typedef struct AnalyzeParams{
+    int threshold=127;  //阈值
+    int morphType=0;    //形态学类型
+    int kernelSize=3;   //核大小
+    int minArea=10;     //最小面积
+}AnalyzeParams;
+
 class Analyzer{
 public:
-    statistics analyze(const cv::Mat &img,double ratio) const;
+    statistics analyze(const cv::Mat &img,double ratio,
+                        const AnalyzeParams& params) const;
 
 };
 
