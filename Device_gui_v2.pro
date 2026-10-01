@@ -25,3 +25,12 @@ RESOURCES += \
     resource.qrc
 
 DISTFILES +=
+
+#opencv配置
+INCLUDEPATH+=D:/opencv/opencv/build/include
+
+CONFIG(debug, debug|release) {
+    LIBS += D:/opencv/opencv/build/x64/vc16/lib/opencv_world4120d.lib
+} else {
+    LIBS += D:/opencv/opencv/build/x64/vc16/lib/opencv_world4120.lib
+}

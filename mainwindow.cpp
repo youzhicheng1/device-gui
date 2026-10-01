@@ -231,8 +231,16 @@ void MainWindow::OpenPicture()
     QString path=QFileDialog::getOpenFileName(this,"打开图片","D:/","图片 (*.png *.jpg *.bmp)");
     if(path.isEmpty()) QMessageBox::warning(this,"错误","图片不存在");
 
-    QPixmap pix(path);
-    if(pix.isNull()) QMessageBox::warning(this,"错误","图片打开失败");
+    // QPixmap pix(path);
+    // if(pix.isNull()) QMessageBox::warning(this,"错误","图片打开失败");
+
+    cv::Mat img = cv::imread(path.toLocal8Bit().toStdString());
+    if(img.empty()) QMessageBox::warning(this,"错误","图片打开失败");
+
+    cv::Mat rgb;
+    cv::cvtColor(img,rgb,cv::COLOR_BGR2RGB);
+    QImage qimg(rgb.data,rgb.cols,rgb.rows,rgb.step,QImage::Format_RGB888);
+    QPixmap pix=QPixmap::fromImage(qimg.copy());
 
     picture->setPixmap(pix);
 }
