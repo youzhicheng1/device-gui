@@ -15,6 +15,7 @@
 #include <QFileDialog>
 #include <QFile>
 #include <QTextStream>
+#include <QPixmap>
 
 
 QT_BEGIN_NAMESPACE
@@ -45,6 +46,7 @@ private slots:
 
     void SaveDevice();
     void OpenDevice();
+    void OpenPicture();
 private:
     Ui::MainWindow *ui;
     int device_count=0;
@@ -52,5 +54,6 @@ private:
     QMenuBar* mnBar=nullptr;
     QToolBar* toolBar=nullptr;
     QStackedWidget *stackPages=nullptr;
+    QLabel* picture=nullptr;
 };
 #endif // MAINWINDOW_H

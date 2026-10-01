@@ -68,26 +68,40 @@ MainWindow::MainWindow(QWidget *parent)
     stackPages=new QStackedWidget(this);
     QWidget* devicePage=new QWidget(this);
     QWidget* infoPage=new QWidget(this);
+    QWidget* picturePage=new QWidget(this);
     //将散落的按钮放入布局便于添加进页面0
     QVBoxLayout* layout=new QVBoxLayout(devicePage);
     layout->addWidget(ui->horizontalLayoutWidget);
     layout->addWidget(ui->listWidget);
-    //页面2显示设备管理并添加布局居中
+    //页面1显示设备管理并添加布局居中
     QLabel* info=new QLabel("设备管理 v5 ",infoPage);
     info->setAlignment(Qt::AlignCenter);
     QVBoxLayout* lay2=new QVBoxLayout(infoPage);
     lay2->addWidget(info);
+    //页面2将图片放入布局中
+    picture=new QLabel(picturePage);
+    picture->setScaledContents(true);
+    picture->setAlignment(Qt::AlignCenter);
+    QVBoxLayout* lay3=new QVBoxLayout(picturePage);
+    lay3->addWidget(picture);
+
     //加入界面
     stackPages->addWidget(devicePage);
     stackPages->addWidget(infoPage);
+    stackPages->addWidget(picturePage);
     setCentralWidget(stackPages);
     //工具栏添加按钮用于切换界面
     QAction *devicepage=new QAction("device");
     QAction *about=new QAction("about");
+    QAction *pic=new QAction("picture");
     toolBar->addAction(devicepage);
     toolBar->addAction(about);
+    toolBar->addAction(pic);
+    connect(pic, &QAction::triggered, this, &MainWindow::OpenPicture);
+
     connect(devicepage,&QAction::triggered,this,[this]{stackPages->setCurrentIndex(0);});
     connect(about,&QAction::triggered,this,[this]{stackPages->setCurrentIndex(1);});
+    connect(pic,&QAction::triggered,this,[this]{stackPages->setCurrentIndex(2);});
 
     //添加右键菜单
     ui->listWidget->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -210,5 +224,16 @@ void MainWindow::OpenDevice()
 
     file.close();
     updateStatus();
+}
+
+void MainWindow::OpenPicture()
+{
+    QString path=QFileDialog::getOpenFileName(this,"打开图片","D:/","图片 (*.png *.jpg *.bmp)");
+    if(path.isEmpty()) QMessageBox::warning(this,"错误","图片不存在");
+
+    QPixmap pix(path);
+    if(pix.isNull()) QMessageBox::warning(this,"错误","图片打开失败");
+
+    picture->setPixmap(pix);
 }
 
