@@ -4,6 +4,9 @@
 #include <QMainWindow>
 #include <QListWidgetItem>
 #include <QToolBar>
+#include <QTimer>
+#include <QDateTime>
+#include <QKeyEvent>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -19,6 +22,8 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
     void updateStatus();
+    QString timeupdate();
+    void keyPressEvent(QKeyEvent* event) override;
 
 private slots:
     void on_AddButton_clicked();

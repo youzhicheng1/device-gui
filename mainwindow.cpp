@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QKeyEvent>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -42,10 +43,12 @@ MainWindow::MainWindow(QWidget *parent)
     toolBar->addAction(del);
     toolBar->addAction(clear);
 
-
+    //当前时间
+    QTimer* timer=new QTimer(this);
+    connect(timer,&QTimer::timeout,this,&MainWindow::updateStatus);
+    timer->start(1000);
 
     stsBar=statusBar();//状态栏
-    stsBar->showMessage(QString("当前设备数：%1").arg(ui->listWidget->count()));
 }
 
 MainWindow::~MainWindow()
@@ -56,7 +59,21 @@ MainWindow::~MainWindow()
 
 void MainWindow::updateStatus()
 {
-    stsBar->showMessage(QString("当前设备数：%1").arg(ui->listWidget->count()));
+    stsBar->showMessage(QString("当前设备数：%1 | 当前时间：%2").arg(ui->listWidget->count()).arg(timeupdate()));
+}
+
+QString MainWindow::timeupdate()
+{
+    QString str=QDateTime::currentDateTime().toString("hh:mm:ss");
+    return str;
+}
+
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+    if(event->key()==Qt::Key_Delete){
+        delete ui->listWidget->takeItem(ui->listWidget->currentRow());
+        updateStatus();
+    }
 }
 
 
