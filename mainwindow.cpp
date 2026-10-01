@@ -75,19 +75,72 @@ MainWindow::MainWindow(QWidget *parent)
     QVBoxLayout* layout=new QVBoxLayout(devicePage);
     layout->addWidget(ui->horizontalLayoutWidget);
     layout->addWidget(ui->listWidget);
+
+
     //页面1显示设备管理并添加布局居中
     QLabel* info=new QLabel("设备管理 v5 ",infoPage);
     info->setAlignment(Qt::AlignCenter);
     QVBoxLayout* lay2=new QVBoxLayout(infoPage);
     lay2->addWidget(info);
-    //页面2将图片放入布局中
+
+
+    //页面2将图片和参数面板放入布局中
+    QHBoxLayout* page2layout=new QHBoxLayout(picturePage);
+    //左侧布局
     picture=new QLabel(picturePage);
     picture->setScaledContents(true);
     picture1=new QLabel(picturePage);
     picture1->setScaledContents(true);
-    QVBoxLayout* lay3=new QVBoxLayout(picturePage);
-    lay3->addWidget(picture);
-    lay3->addWidget(picture1);
+    QVBoxLayout* leftlayout=new QVBoxLayout(picturePage);
+    leftlayout->addWidget(picture);
+    leftlayout->addWidget(picture1);
+
+    //右侧布局
+    QVBoxLayout* rightpanel=new QVBoxLayout(picturePage);
+    //阈值行
+    QHBoxLayout* thresholdline=new QHBoxLayout(picturePage);
+    QLabel* thresholdname=new QLabel(picturePage);thresholdname->setText("Threshold");
+    QSlider* thresholdSlider=new QSlider(picturePage);thresholdSlider->setOrientation(Qt::Horizontal);thresholdSlider->setRange(0,255);thresholdSlider->setValue(127);
+    QLabel* thresholdValue=new QLabel(picturePage);
+    thresholdline->addWidget(thresholdname);
+    thresholdline->addWidget(thresholdSlider);
+    thresholdline->addWidget(thresholdValue);
+    rightpanel->addLayout(thresholdline);
+    //形态学
+    QHBoxLayout* morphline=new QHBoxLayout(picturePage);
+    QLabel* morphname=new QLabel(picturePage);morphname->setText("morph");
+    QRadioButton* rb_none  = new QRadioButton("none");
+    QRadioButton* rb_open  = new QRadioButton("open");
+    QRadioButton* rb_close = new QRadioButton("close");
+    QButtonGroup* grp = new QButtonGroup(this);   // ← 新面孔,作用:组内互斥
+    grp->addButton(rb_none,  0);   // 第二个参数是 id
+    grp->addButton(rb_open,  1);
+    grp->addButton(rb_close, 2);
+    morphline->addWidget(morphname);
+    morphline->addWidget(rb_none);
+    morphline->addWidget(rb_open);
+    morphline->addWidget(rb_close);
+    rightpanel->addLayout(morphline);
+    //核大小
+    QHBoxLayout* kernelSizeline=new QHBoxLayout(picturePage);
+    QLabel* kernelSizename=new QLabel(picturePage);kernelSizename->setText("kernelSize");
+    QSpinBox* kernelSizeSpinbox=new QSpinBox(picturePage);kernelSizeSpinbox->setRange(1,15);kernelSizeSpinbox->setValue(3);
+    kernelSizeline->addWidget(kernelSizename);
+    kernelSizeline->addWidget(kernelSizeSpinbox);
+    rightpanel->addLayout(kernelSizeline);
+    //最小面积
+    QHBoxLayout* minArealine=new QHBoxLayout(picturePage);
+    QLabel* minAreaname=new QLabel(picturePage);minAreaname->setText("minArea");
+    QSpinBox* minAreaSpinbox=new QSpinBox(picturePage);minAreaSpinbox->setRange(1,1000);minAreaSpinbox->setValue(10);
+    minArealine->addWidget(minAreaname);
+    minArealine->addWidget(minAreaSpinbox);
+    rightpanel->addLayout(minArealine);
+    //分析按钮
+    QPushButton* AnalyzeButton=new QPushButton(picturePage);AnalyzeButton->setText("Analyze");
+    rightpanel->addWidget(AnalyzeButton);
+    //放入布局
+    page2layout->addLayout(leftlayout);
+    page2layout->addLayout(rightpanel);
 
     //加入界面
     stackPages->addWidget(devicePage);

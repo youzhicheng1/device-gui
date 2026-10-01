@@ -19,6 +19,9 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
 #include <QThread>
+#include <QSpinBox>
+#include <QRadioButton>
+#include <QButtonGroup>
 #include "Analyzer.h"
 
 class Worker;

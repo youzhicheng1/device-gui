@@ -1,3 +1,4 @@
+* { color: #000000; }
 QMainWindow{
     background-color:#f0f2f5;
 }
