@@ -1,5 +1,23 @@
+# 构建产物
 build/
-*.user
-*.pro.user
+build-*/
 Debug/
 Release/
+*.exe
+*.dll
+*.obj
+
+# Qt Creator / IDE
+.qtcreator/
+*.user
+*.user.*
+CMakeLists.txt.user*
+*.autosave
+
+# 其他
+*.o
+*.so
+*.a
+*.pdb
+*.ilk
+.vs/
