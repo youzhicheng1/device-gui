@@ -117,6 +117,20 @@ MainWindow::MainWindow(QWidget *parent)
 
         menu.exec(ui->listWidget->mapToGlobal(pos));
     });
+
+
+
+    QThread* thread=new QThread(this);
+    Worker* worker=new Worker;
+    worker->moveToThread(thread);
+    connect(thread,&QThread::started,worker,&Worker::dowork);
+    connect(worker,&Worker::finished,thread,&QThread::quit);
+    connect(worker,&Worker::progress,this,[](int p){
+        qDebug()<<"当前进度："<<p;
+    });
+
+    thread->start();
+    connect(thread, &QThread::finished, thread, &QThread::deleteLater);  // 线程自我清理
 }
 
 MainWindow::~MainWindow()

@@ -18,6 +18,7 @@
 #include <QPixmap>
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
+#include <QThread>
 
 
 QT_BEGIN_NAMESPACE
@@ -60,4 +61,20 @@ private:
     QLabel* picture=nullptr;
     QLabel* picture1=nullptr;
 };
+
+class Worker:public QObject{
+    Q_OBJECT
+public slots:
+    void dowork(){
+        for(int i=0;i<5;i++){
+            QThread::sleep(1);
+            emit progress(i+1);
+        }
+        emit finished();
+    }
+signals:
+    void progress(int);
+    void finished();
+};
+
 #endif // MAINWINDOW_H
