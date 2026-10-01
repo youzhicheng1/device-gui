@@ -1,0 +1,15 @@
+QMainWindow{
+    background-color:#f0f2f5;
+}
+
+QPushButton{
+    background-color: #4a90d9;
+    color: white;
+    border-radius: 4px;
+}
+
+QPushButton:hover   { background-color: #357abd; }   /* 悬停 */
+QPushButton:pressed { background-color: #2a6096; }   /* 按下 */
+
+QListWidget::item:selected { background-color: #dcebff; }
+QStatusBar { background-color: #e8ecf1; }

@@ -6,6 +6,13 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    //加载 QSS 样式(从资源)
+    QFile qss(":/style.qss");
+    if (qss.open(QFile::ReadOnly)) {
+        this->setStyleSheet(qss.readAll());
+        qss.close();
+    }
+
     //菜单栏
     mnBar=menuBar();
     QMenu* device=new QMenu("device");
@@ -170,7 +177,7 @@ void MainWindow::on_listWidget_itemDoubleClicked(QListWidgetItem *item)
 
 void MainWindow::SaveDevice()
 {
-    QString path=QFileDialog::getSaveFileName(this,"保存设备列表","D:\\Linux课件2025\\Linux课件2025\\Qt练习\\Device_gui_v2","文本文(*.txt)");
+    QString path=QFileDialog::getSaveFileName(this,"保存设备列表","D:\\Linux课件2025\\Linux课件2025\\Qt练习\\Device_gui_v2","文本文档(*.txt)");
     if(path.isEmpty()) return;
 
     QFile file(path);
