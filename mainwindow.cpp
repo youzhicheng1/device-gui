@@ -1,5 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+
+#include <algorithm>
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -144,18 +146,37 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
 
 void MainWindow::convertPicture(cv::Mat img)
 {
+    //灰度图
     cv::Mat gray;
     cv::cvtColor(img,gray,cv::COLOR_BGR2GRAY);
-
+    //二值图
     cv::Mat binary;
     cv::threshold(gray,binary,127,255,cv::THRESH_BINARY);
 
     QImage qbin(binary.data,binary.cols,binary.rows,binary.step,QImage::Format_Grayscale8);
-
+    //寻找轮廓
     std::vector<std::vector<cv::Point>> contours;
     cv::findContours(binary,contours,cv::RETR_EXTERNAL,cv::CHAIN_APPROX_SIMPLE);
+    //筛选颗粒
+    std::vector<double> areas;
+    for(const auto &c:contours){
+        double area=cv::contourArea(c);
+        if(area<10) continue;
+        areas.push_back(area);
+    }
+    //统计
+    double sum=0,maxA=0,minA=1e9;
+    for(double a:areas){
+        sum+=a;
+        maxA=std::max(maxA,a);
+        minA=std::min(minA,a);
+    }
+    double avg=areas.empty()?0:(sum/areas.size());
 
-    QMessageBox::information(this, "结果", QString("检测到 %1 个轮廓").arg(contours.size()));
+    // 显示
+    QMessageBox::information(this, "颗粒统计",
+                             QString("颗粒数:%1\n平均面积:%2\n最大:%3\n最小:%4")
+                                 .arg(areas.size()).arg(avg).arg(maxA).arg(minA));
 
     cv::Mat result=img.clone();
     cv::drawContours(result,contours,-1,cv::Scalar(0,255,0),2);
