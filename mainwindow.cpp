@@ -188,10 +188,13 @@ MainWindow::MainWindow(QWidget *parent)
     connect(this,&MainWindow::startAnalyze,worker,&Worker::doAnalyze);   //叫ui来干活
     connect(worker,&Worker::analyzeDone,this,&MainWindow::onAnalyzeDone);//ui收结果
     connect(thread, &QThread::finished, thread, &QThread::deleteLater);  // 线程自我清理
+    connect(thread,&QThread::finished,worker,&QThread::deleteLater);
 }
 
 MainWindow::~MainWindow()
 {
+    thread->quit();
+    thread->wait();
     delete ui;
 }
 
@@ -402,7 +405,7 @@ void MainWindow::onExportCsv()
                .arg(m_lastResult.d10, 0, 'f', 2).arg(m_lastResult.d50, 0, 'f', 2)
                .arg(m_lastResult.d90, 0, 'f', 2).arg(m_lastResult.span, 0, 'f', 3);
 
-    // ③ 21 点表(你来写)
+    // ③ 21 点表
     out << "percentile,size_um\n";
     for(int i = 0; i < (int)m_lastResult.curve.size(); i++){
         out << (i * 5) << "," << m_lastResult.curve[i] << "\n"; // 第3行:写一行"百分位,粒径"
