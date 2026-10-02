@@ -25,6 +25,8 @@
 #include <QTcpSocket>
 #include "Analyzer.h"
 
+static const int HEADER_SIZE=4;
+
 class Worker;
 
 QT_BEGIN_NAMESPACE
@@ -90,9 +92,11 @@ private:
     AnalyzeParams m_lastParams;             //上次分析用的参数(导出用)
     QPushButton* m_analyzeButton=nullptr;
     bool m_busy=false;
-    QTcpSocket m_socket;                   //单设备socket
+    QTcpSocket m_socket;                    //单设备socket
     //多设备暂时不写
     //std::vector<std::pair<QTcpSocket*,bool>> devices;
+
+    QByteArray m_buffer;                    //缓冲区
 
 signals:
     void startAnalyze(const cv::Mat& img,double ratio,const AnalyzeParams& params);

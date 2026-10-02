@@ -466,9 +466,26 @@ void MainWindow::onSocketDisConnected()
 
 void MainWindow::onSocketReadyRead()
 {
-    qDebug()<<"device ready to read\n";
-    QByteArray data=m_socket.readAll();
-    qDebug()<<"recv: "<<data;
+    // qDebug()<<"device ready to read\n";
+    // QByteArray data=m_socket.readAll();
+    // qDebug()<<"recv: "<<data;
+
+    m_buffer.append(m_socket.readAll());//读入
+
+    while(true){
+        if(m_buffer.size()<HEADER_SIZE) break;
+
+        QDataStream in(m_buffer);                               //创建流
+        in.setByteOrder(QDataStream::BigEndian);                //设置大端
+        quint32 len=0;
+        in>>len;
+
+        if(m_buffer.size()<HEADER_SIZE+(int)len) break;
+
+        QByteArray payload=m_buffer.mid(HEADER_SIZE,len);       //从HEADER_SIZE起取len长度字节
+        m_buffer.remove(0, HEADER_SIZE+len);                    //删掉整条
+        qDebug()<<"message: "<<payload;                         //输出消息
+    }
 }
 
 void MainWindow::onSocketError()
