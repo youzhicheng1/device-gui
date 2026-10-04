@@ -47,6 +47,7 @@ public:
     void keyPressEvent(QKeyEvent* event) override;
     void convertPicture(cv::Mat img);
     AnalyzeParams collectParams() const;
+
 private slots:
     void on_AddButton_clicked();
 
@@ -69,7 +70,7 @@ private slots:
     void onSocketDisConnected();
     void onSocketReadyRead();
     void onSocketError();
-
+    void tryReconnect();
 private:
     Ui::MainWindow *ui;
     int device_count=0;
@@ -97,7 +98,9 @@ private:
     //std::vector<std::pair<QTcpSocket*,bool>> devices;
 
     QByteArray m_buffer;                    //缓冲区
-
+    int m_failCount=0;                      //连接失败计数
+    QTimer m_reconnectTimer;                //重连定时器
+    bool m_userDisconnect = false;          // true = 用户主动断开(不自动重连)
 signals:
     void startAnalyze(const cv::Mat& img,double ratio,const AnalyzeParams& params);
 };

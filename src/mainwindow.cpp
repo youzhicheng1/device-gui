@@ -195,6 +195,9 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&m_socket, &QTcpSocket::disconnected,  this, &MainWindow::onSocketDisConnected);
     connect(&m_socket, &QTcpSocket::readyRead,     this, &MainWindow::onSocketReadyRead);
     connect(&m_socket, &QTcpSocket::errorOccurred, this, &MainWindow::onSocketError);
+
+    m_reconnectTimer.setInterval(2000);
+    connect(&m_reconnectTimer, &QTimer::timeout, this, &MainWindow::tryReconnect);
 }
 
 MainWindow::~MainWindow()
@@ -445,6 +448,7 @@ void Worker::doAnalyze(const cv::Mat &img, double ratio,const AnalyzeParams& par
 void MainWindow::on_ConnectButton_clicked()
 {
     if(m_socket.state()==QAbstractSocket::ConnectedState){
+        m_userDisconnect=true;                              //说明用户主动点击断开
         m_socket.disconnectFromHost();
     }else{
         m_socket.connectToHost("127.0.0.1",8888);
@@ -453,15 +457,30 @@ void MainWindow::on_ConnectButton_clicked()
 
 void MainWindow::onSocketConnected()
 {
+    m_failCount=0;
+    m_reconnectTimer.stop();
     ui->ConnectButton->setText("ToDisConnected");
-    qDebug()<<"device connected\n";
+    qDebug()<<"device connected";
     m_socket.write("hello\n");
+    m_userDisconnect=false;
 }
 
 void MainWindow::onSocketDisConnected()
 {
     ui->ConnectButton->setText("ToConnected");
-    qDebug()<<"device disconnected\n";
+
+    if(m_userDisconnect){
+        m_userDisconnect=false;
+        m_failCount=0;
+        qDebug()<<"user disconnect";
+        return;
+    }
+
+    qDebug()<<"unexpected disconnection, auto reconnect";
+    m_failCount=0;
+    ui->ConnectButton->setText(QString("重连中 %1/5").arg(m_failCount));
+    if(!m_reconnectTimer.isActive())
+        m_reconnectTimer.start();
 }
 
 void MainWindow::onSocketReadyRead()
@@ -490,6 +509,29 @@ void MainWindow::onSocketReadyRead()
 
 void MainWindow::onSocketError()
 {
-    qDebug() << "socket error:" << m_socket.errorString();
+    m_failCount++;
+    qDebug() << "socket error:" << m_socket.errorString()
+             <<"失败次数："<<m_failCount;
+    if(m_failCount<5){
+        if(!m_reconnectTimer.isActive()){
+            m_reconnectTimer.start();
+        }
+        ui->ConnectButton->setText(QString("重连中 %1/5").arg(m_failCount));
+    }else{
+        m_reconnectTimer.stop();
+        qDebug()<<"连续失败 5 次，停止重连";
+        ui->ConnectButton->setText("connect");
+        m_failCount=0;
+    }
+
+}
+
+void MainWindow::tryReconnect()
+{
+    // 只在"完全没在连接"的状态下才发起新连接
+    if (m_socket.state() != QAbstractSocket::UnconnectedState) return;
+
+    qDebug()<<"尝试重连...";
+    m_socket.connectToHost("127.0.0.1",8888);
 }
 
