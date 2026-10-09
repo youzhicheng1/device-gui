@@ -23,6 +23,8 @@
 #include <QRadioButton>
 #include <QButtonGroup>
 #include <QTcpSocket>
+#include <QGraphicsView>
+#include <QGraphicsScene>
 #include "Analyzer.h"
 
 static const int HEADER_SIZE=4;
@@ -71,6 +73,8 @@ private slots:
     void onSocketReadyRead();
     void onSocketError();
     void tryReconnect();
+protected:
+    void resizeEvent(QResizeEvent* event) override;
 private:
     Ui::MainWindow *ui;
     int device_count=0;
@@ -78,8 +82,10 @@ private:
     QMenuBar* mnBar=nullptr;
     QToolBar* toolBar=nullptr;
     QStackedWidget *stackPages=nullptr;
-    QLabel* picture=nullptr;
-    QLabel* picture1=nullptr;
+    QGraphicsView* picture=nullptr;
+    QGraphicsView* picture1=nullptr;
+    QGraphicsScene* m_scene=nullptr;
+    QGraphicsScene* m_scene2=nullptr;
     Analyzer* aa=nullptr;
     Worker* worker=nullptr;
     QThread* thread=nullptr;

@@ -87,10 +87,13 @@ MainWindow::MainWindow(QWidget *parent)
     //页面2将图片和参数面板放入布局中
     QHBoxLayout* page2layout=new QHBoxLayout(picturePage);
     //左侧布局
-    picture=new QLabel(picturePage);
-    picture->setScaledContents(true);
-    picture1=new QLabel(picturePage);
-    picture1->setScaledContents(true);
+    m_scene=new QGraphicsScene(this);
+    picture=new QGraphicsView(picturePage);
+    picture->setScene(m_scene);
+
+    m_scene2=new QGraphicsScene(this);
+    picture1=new QGraphicsView(picturePage);
+    picture1->setScene(m_scene2);
     QVBoxLayout* leftlayout=new QVBoxLayout();
     leftlayout->addWidget(picture);
     leftlayout->addWidget(picture1);
@@ -356,7 +359,9 @@ void MainWindow::OpenPicture()
     QImage qimg(rgb.data,rgb.cols,rgb.rows,rgb.step,QImage::Format_RGB888);
     QPixmap pix=QPixmap::fromImage(qimg.copy());
 
-    picture->setPixmap(pix);
+    m_scene->clear();
+    m_scene->addPixmap(pix);
+    picture->fitInView(m_scene->itemsBoundingRect(),Qt::KeepAspectRatio);
 }
 
 void MainWindow::onAnalyzeDone(const statistics &ss)
@@ -376,8 +381,9 @@ void MainWindow::onAnalyzeDone(const statistics &ss)
     cv::cvtColor(result,rgbResult,cv::COLOR_BGR2RGB);
     QImage qres(rgbResult.data,rgbResult.cols,rgbResult.rows,rgbResult.step,QImage::Format_RGB888);
 
-
-    picture1->setPixmap(QPixmap::fromImage(qres.copy()));
+    m_scene2->clear();
+    m_scene2->addPixmap(QPixmap::fromImage(qres.copy()));
+    picture1->fitInView(m_scene2->itemsBoundingRect(),Qt::KeepAspectRatio);
 
     m_busy=false;
     m_analyzeButton->setDisabled(false);
@@ -533,5 +539,16 @@ void MainWindow::tryReconnect()
 
     qDebug()<<"尝试重连...";
     m_socket.connectToHost("127.0.0.1",8888);
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+    QMainWindow::resizeEvent(event);          // ★ 先调基类(必须!)
+
+    if (m_scene && !m_scene->items().isEmpty())
+        picture->fitInView(m_scene->itemsBoundingRect(), Qt::KeepAspectRatio);
+
+    if (m_scene2 && !m_scene2->items().isEmpty())
+        picture1->fitInView(m_scene2->itemsBoundingRect(), Qt::KeepAspectRatio);
 }
 
