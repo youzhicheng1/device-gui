@@ -26,6 +26,7 @@ add_executable(Device_gui_v2
     src/mainwindow.h
     src/mainwindow.ui
     resource.qrc
+    src/imageview.h src/imageview.cpp
 )
 target_link_libraries(Device_gui_v2 PRIVATE analyzer Qt6::Widgets Qt6::Network)
 

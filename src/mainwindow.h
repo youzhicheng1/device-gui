@@ -26,6 +26,7 @@
 #include <QGraphicsView>
 #include <QGraphicsScene>
 #include "Analyzer.h"
+#include "imageview.h"
 
 static const int HEADER_SIZE=4;
 
@@ -73,6 +74,8 @@ private slots:
     void onSocketReadyRead();
     void onSocketError();
     void tryReconnect();
+
+    void onRoiChanged(const QRectF& rect);
 protected:
     void resizeEvent(QResizeEvent* event) override;
 private:
@@ -82,10 +85,12 @@ private:
     QMenuBar* mnBar=nullptr;
     QToolBar* toolBar=nullptr;
     QStackedWidget *stackPages=nullptr;
-    QGraphicsView* picture=nullptr;
+
+    ImageView* picture=nullptr;
     QGraphicsView* picture1=nullptr;
     QGraphicsScene* m_scene=nullptr;
     QGraphicsScene* m_scene2=nullptr;
+
     Analyzer* aa=nullptr;
     Worker* worker=nullptr;
     QThread* thread=nullptr;
@@ -98,6 +103,7 @@ private:
     statistics   m_lastResult;              //上次分析结果(导出用)
     AnalyzeParams m_lastParams;             //上次分析用的参数(导出用)
     QPushButton* m_analyzeButton=nullptr;
+
     bool m_busy=false;
     QTcpSocket m_socket;                    //单设备socket
     //多设备暂时不写
@@ -107,6 +113,10 @@ private:
     int m_failCount=0;                      //连接失败计数
     QTimer m_reconnectTimer;                //重连定时器
     bool m_userDisconnect = false;          // true = 用户主动断开(不自动重连)
+
+    QRectF m_roi;
+private:
+    cv::Mat applyRoi(const cv::Mat& src) const;
 signals:
     void startAnalyze(const cv::Mat& img,double ratio,const AnalyzeParams& params);
 };

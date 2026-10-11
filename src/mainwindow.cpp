@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "Analyzer.h"
+#include <algorithm>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -88,7 +89,7 @@ MainWindow::MainWindow(QWidget *parent)
     QHBoxLayout* page2layout=new QHBoxLayout(picturePage);
     //左侧布局
     m_scene=new QGraphicsScene(this);
-    picture=new QGraphicsView(picturePage);
+    picture=new ImageView(picturePage);
     picture->setScene(m_scene);
 
     m_scene2=new QGraphicsScene(this);
@@ -201,6 +202,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     m_reconnectTimer.setInterval(2000);
     connect(&m_reconnectTimer, &QTimer::timeout, this, &MainWindow::tryReconnect);
+
+    //roi连接
+    connect(picture, &ImageView::roiChanged, this, &MainWindow::onRoiChanged);
 }
 
 MainWindow::~MainWindow()
@@ -242,7 +246,24 @@ void MainWindow::convertPicture(cv::Mat img)
     m_currentImg=img;
     m_ratio=ratio;
     m_lastParams=collectParams();
-    emit startAnalyze(m_currentImg,m_ratio,collectParams());
+    // emit startAnalyze(m_currentImg,m_ratio,collectParams());
+
+    cv::Mat input=m_currentImg;
+    if(m_roi.width()>0&&m_roi.height()>0){
+        // ① 转成 cv::Rect,并【裁剪到图片边界内】(防止拖到图外面越界崩溃)
+        int x = std::max(0, (int)m_roi.x());
+        int y = std::max(0, (int)m_roi.y());
+        int w = std::min((int)m_roi.width(),  m_currentImg.cols - x);
+        int h = std::min((int)m_roi.height(), m_currentImg.rows - y);
+
+        if (w > 0 && h > 0) {
+            cv::Rect r(x, y, w, h);
+            input = m_currentImg(r).clone();        // ★ 裁出子图
+            qDebug() << "使用 ROI 分析:" << x << y << w << h;
+        }
+    }
+
+    emit startAnalyze(applyRoi(input), m_ratio, collectParams());   // ← 发子图
 }
 
 AnalyzeParams MainWindow::collectParams() const
@@ -361,7 +382,10 @@ void MainWindow::OpenPicture()
 
     m_scene->clear();
     m_scene->addPixmap(pix);
-    picture->fitInView(m_scene->itemsBoundingRect(),Qt::KeepAspectRatio);
+    //picture->fitInView(m_scene->itemsBoundingRect(),Qt::KeepAspectRatio);
+    QTimer::singleShot(0,this,[this](){
+        picture->fitInView(m_scene->itemsBoundingRect(),Qt::KeepAspectRatio);
+    });
 }
 
 void MainWindow::onAnalyzeDone(const statistics &ss)
@@ -383,7 +407,10 @@ void MainWindow::onAnalyzeDone(const statistics &ss)
 
     m_scene2->clear();
     m_scene2->addPixmap(QPixmap::fromImage(qres.copy()));
-    picture1->fitInView(m_scene2->itemsBoundingRect(),Qt::KeepAspectRatio);
+    //picture1->fitInView(m_scene2->itemsBoundingRect(),Qt::KeepAspectRatio);
+    QTimer::singleShot(0, this, [this](){
+        picture1->fitInView(m_scene2->itemsBoundingRect(), Qt::KeepAspectRatio);
+    });
 
     m_busy=false;
     m_analyzeButton->setDisabled(false);
@@ -400,7 +427,7 @@ void MainWindow::onAnalyzeClick()
     m_analyzeButton->setText("分析中...");
     AnalyzeParams p = collectParams();   // 只取一次
     m_lastParams = p;                    // 存快照
-    emit startAnalyze(m_currentImg, m_ratio, p);   // 发同一份
+    emit startAnalyze(applyRoi(m_currentImg), m_ratio, p);   // 发同一份
 }
 
 void MainWindow::onExportCsv()
@@ -541,6 +568,17 @@ void MainWindow::tryReconnect()
     m_socket.connectToHost("127.0.0.1",8888);
 }
 
+void MainWindow::onRoiChanged(const QRectF &rect)
+{
+    m_roi = rect;
+    qDebug() << "MainWindow 收到 ROI:" << rect;
+
+    // ★ 加这一行:弹窗验证(比 qDebug 可靠)
+    QMessageBox::information(this, "ROI",
+                             QString("收到 ROI: x=%1 y=%2 宽=%3 高=%4")
+                                 .arg(rect.x()).arg(rect.y()).arg(rect.width()).arg(rect.height()));
+}
+
 void MainWindow::resizeEvent(QResizeEvent *event)
 {
     QMainWindow::resizeEvent(event);          // ★ 先调基类(必须!)
@@ -550,5 +588,21 @@ void MainWindow::resizeEvent(QResizeEvent *event)
 
     if (m_scene2 && !m_scene2->items().isEmpty())
         picture1->fitInView(m_scene2->itemsBoundingRect(), Qt::KeepAspectRatio);
+}
+
+cv::Mat MainWindow::applyRoi(const cv::Mat &src) const
+{
+    if(m_roi.width()<0||m_roi.height()<0) return src;
+
+    int x = std::max(0, (int)m_roi.x());
+    int y = std::max(0, (int)m_roi.y());
+    int w = std::min((int)m_roi.width(),  src.cols - x);
+    int h = std::min((int)m_roi.height(), src.rows - y);
+
+    if (w <= 0 || h <= 0) return src;
+
+    qDebug()<<"使用 ROI 分析："<<x<<y<<w<<h;
+
+    return src(cv::Rect(x,y,w,h)).clone();
 }
 
