@@ -21,6 +21,7 @@
 - Qt Widgets 界面 + QSS 样式
 - 菜单栏 / 状态栏 / 事件处理
 - 图像显示(自适应缩放)
+- **ROI 框选**:自定义 `ImageView`(QGraphicsView)重写鼠标事件,`mapToScene` 坐标转换,信号广播给主窗口;OpenCV 侧边界保护 + `clone()` 裁剪,只分析框内
 
 ### 工程特性
 - **多线程**:分析任务在 worker 线程执行(`moveToThread`),界面不阻塞
@@ -39,6 +40,16 @@
 - **可靠性**:失败计数 + 主动连接有限重试 + **掉线自动重连**(标志位区分"用户主动断开"与"意外掉线");通过**故障注入**验证(不启动设备 / 中途杀掉 / 重启恢复)
 
 ---
+
+## 架构(三层)
+
+| 层 | 组件 | 线程 |
+|---|---|---|
+| UI | MainWindow、ImageView | 主线程 |
+| 分析 | QThread、Worker、Analyzer(静态库) | Worker 线程 |
+| 通信 | QTcpSocket、协议(当前在 MainWindow 内)、sim_device(外部进程) | 主线程 |
+
+数据流:ImageView `roiChanged` → MainWindow 收 ROI → `applyRoi` 裁剪 → `startAnalyze` → Worker → Analyzer → `analyzeDone` → 结果图。
 
 ## 技术栈
 
@@ -60,6 +71,7 @@ Device_gui_v2/
 ├─ src/
 │  ├─ main.cpp             # 入口(加载 QSS、启动主窗口)
 │  ├─ mainwindow.h/.cpp/.ui# 界面与交互
+│  ├─ imageview.h/.cpp     # 自定义 QGraphicsView:ROI 框选
 │  └─ Analyzer.h/.cpp      # 图像分析算法(独立模块)
 ├─ tests/
 │  └─ tst_analyzer.cpp     # 算法单元测试(QTest)
@@ -102,7 +114,8 @@ cd build && ctest --output-on-failure
 - [x] v16:TCP 本地模拟设备(`tools/sim_device`)+ 上位机客户端连接/收发/状态显示
 - [x] v17:自定义协议(**4 字节长度头 + BigEndian**)+ 缓冲区循环拆包(通过粘包/半包验证)
 - [x] v18:失败计数 + 主动连接有限重试 + **掉线自动重连** + 故障注入验证(不启动 / 杀掉 / 重启设备)
-- [ ] 产品化:ROI/缩放、配置与日志、检测记录持久化、Release 部署 ← 下一步
+- [x] 产品化 Step 1–2:QGraphicsView 自适应显示 + ROI 框选(自定义 ImageView + 信号广播 + 边界保护)
+- [ ] 产品化:配置与日志、检测记录持久化(SQLite)、Release 部署 ← 下一步
 
 ---
 
